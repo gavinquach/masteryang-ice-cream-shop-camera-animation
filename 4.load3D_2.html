@@ -1,0 +1,148 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three sample</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        box-sizing: border-box;
+        overflow: hidden;
+        background: linear-gradient(lightblue, navy);
+      }
+      #three {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="three"></canvas>
+    <script
+      defer
+      src="https://ga.jspm.io/npm:es-module-shims@1.6.2/dist/es-module-shims.js"
+    ></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+          "three/examples/jsm/": "https://unpkg.com/three@0.147.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      /** @format */
+
+      import * as THREE from "three";
+      import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+      import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+      const scene = new THREE.Scene();
+      const canvas = document.querySelector("#three");
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setClearColor(0x000000, 0);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      // 모델 객체를 저장할 변수
+      let model1;
+      let model2;
+
+      const loader = new GLTFLoader();
+
+      loader.load(
+        "./models/shop/shop.gltf",
+        function (gltf) {
+          model1 = gltf.scene;
+          scene.add(model1);
+          // 모델1에 대한 크기와 위치 변경 예시
+          model1.scale.set(0.5, 0.5, 0.5);
+          model1.position.set(0, 0, 0);
+        },
+        function (xhr) {
+          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        },
+        function (error) {
+          console.error("An error happened", error);
+        }
+      );
+
+      loader.load(
+        "./models/cloud/scene.gltf",
+        function (gltf) {
+          model2 = gltf.scene;
+          scene.add(model2);
+          model2.scale.set(0.25, 0.25, 0.25);
+          model2.position.set(0, 2, 0);
+        },
+        function (xhr) {
+          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        },
+        function (error) {
+          console.error("An error happened", error);
+        }
+      );
+
+      camera.position.set(0.8, 2, 3);
+
+      //add ambient light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+      scene.add(ambientLight);
+
+      // add light
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(1, 1, 1).normalize();
+      scene.add(light);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      // controls.enableRotate = false;
+
+      const clock = new THREE.Clock();
+
+
+      camera.lookAt(scene.position);
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (model2) {
+          model2.position.y += 0.0001; // Adjust this value to control the speed of ascension
+          model2.position.x += 0.001 * Math.sin(clock.getElapsedTime());
+          model2.position.z += 0.001 * Math.sin(clock.getElapsedTime());
+        }
+     
+
+        const elapsed = clock.getElapsedTime();
+        controls.update();
+        renderer.render(scene, camera);
+        // console.log(camera.position);
+      }
+
+      animate();
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      window.addEventListener("resize", onWindowResize);
+    </script>
+  </body>
+</html>
