@@ -15,6 +15,7 @@
         overflow: hidden;
         background: linear-gradient(lightblue, navy);
       }
+
       #three {
         width: 100%;
         height: 100vh;
@@ -22,6 +23,7 @@
       }
     </style>
   </head>
+
   <body>
     <canvas id="three"></canvas>
     <script
@@ -44,6 +46,8 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
       import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+      import { gsap } from "https://cdn.skypack.dev/gsap";
+
       const scene = new THREE.Scene();
       const canvas = document.querySelector("#three");
       const camera = new THREE.PerspectiveCamera(
@@ -100,8 +104,6 @@
         }
       );
 
-      camera.position.set(0.8, 2, 3);
-
       //add ambient light
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
       scene.add(ambientLight);
@@ -116,20 +118,64 @@
 
       const clock = new THREE.Clock();
 
+      function animateCamera() {
+        // Add camera to a group so we can move the camera
+        // around the object by rotating the group
+        const boom = new THREE.Group();
+        boom.add(camera);
+        scene.add(boom);
+        controls?.target?.set(0, 0.1, 0);
+        camera.position.set(0.8, 2, 3);
+        // Move camera closer to object's left side
+        gsap.to(camera.position, {
+          duration: 3,
+          x: -1,
+          y: 0.3,
+          z: 0,
+          ease: "none",
+          onComplete: function () {
+            // Rotate camera up to see the entire building
+            gsap.to(controls.target, {
+              duration: 3,
+              x: 0,
+              y: 0.5,
+              z: 0,
+              ease: "power1.easeIn",
+            });
 
-      camera.lookAt(scene.position);
+            // Rotate camera around object
+            gsap.to(boom.rotation, {
+              duration: 3,
+              y: -Math.PI * 1.3,
+              ease: "none",
+              onComplete: function () {
+                gsap.to(boom.position, {
+                  duration: 3,
+                  x: 0.6,
+                  y: 1.6,
+                  z: 1.8,
+                  ease: "power2.easeOut",
+                  onComplete: animateCamera, // Call the function again to loop
+                });
+              },
+            });
+          },
+        });
+      }
+
+      // Call the function to start the animation loop
+      animateCamera();
 
       function animate() {
         requestAnimationFrame(animate);
+        const elapsed = clock.getElapsedTime();
 
         if (model2) {
           model2.position.y += 0.0001; // Adjust this value to control the speed of ascension
-          model2.position.x += 0.001 * Math.sin(clock.getElapsedTime());
-          model2.position.z += 0.001 * Math.sin(clock.getElapsedTime());
+          model2.position.x += 0.001 * Math.sin(elapsed);
+          model2.position.z += 0.001 * Math.sin(elapsed);
         }
-     
 
-        const elapsed = clock.getElapsedTime();
         controls.update();
         renderer.render(scene, camera);
         // console.log(camera.position);
